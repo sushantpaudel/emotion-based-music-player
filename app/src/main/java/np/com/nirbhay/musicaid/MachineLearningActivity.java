@@ -1,10 +1,6 @@
 package np.com.nirbhay.musicaid;
 
 import android.annotation.SuppressLint;
-import android.os.Bundle;
-import android.provider.MediaStore;
-import android.support.annotation.Nullable;
-import android.support.v7.app.AppCompatActivity;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
@@ -14,9 +10,8 @@ import android.graphics.drawable.BitmapDrawable;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
-import android.view.Menu;
-import android.view.MenuItem;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
@@ -28,8 +23,6 @@ import com.microsoft.projectoxford.emotion.EmotionServiceRestClient;
 import com.microsoft.projectoxford.emotion.contract.FaceRectangle;
 import com.microsoft.projectoxford.emotion.contract.RecognizeResult;
 import com.microsoft.projectoxford.emotion.rest.EmotionServiceException;
-//import com.microsoft.projectoxford.emotionsample.helper.ImageHelper;
-
 import com.microsoft.projectoxford.face.FaceServiceRestClient;
 import com.microsoft.projectoxford.face.contract.Face;
 
@@ -39,6 +32,8 @@ import java.io.IOException;
 import java.util.List;
 
 import np.com.nirbhay.musicaid.CognitiveEmotion.ImageHelper;
+
+//import com.microsoft.projectoxford.emotionsample.helper.ImageHelper;
 
 /**
  * Created by sushant on 1/23/2018 at 8:01 PM.
@@ -67,6 +62,7 @@ public class MachineLearningActivity extends AppCompatActivity {
         setContentView(R.layout.activity_machine_learning);
         mEditText = findViewById(R.id.editTextMachine);
         mButtonSelectImage = findViewById(R.id.buttonMachine);
+        client = new EmotionServiceRestClient(getString(R.string.subscription_key));
     }
 
     public void doRecognize() {
@@ -112,7 +108,8 @@ public class MachineLearningActivity extends AppCompatActivity {
                     mBitmap = ImageHelper.loadSizeLimitedBitmapFromUri(
                             mImageUri, getContentResolver());
                     if (mBitmap != null) {
-                        String[] FILE = { MediaStore.Images.Media.DATA };
+                        ImageView imageView = (ImageView) findViewById(R.id.selectedImage);
+                        imageView.setImageBitmap(mBitmap);
                         Log.d("RecognizeActivity", "Image: " + mImageUri + " resized to " + mBitmap.getWidth()
                                 + "x" + mBitmap.getHeight());
                         doRecognize();
@@ -129,23 +126,23 @@ public class MachineLearningActivity extends AppCompatActivity {
         Log.d("emotion", "Start emotion detection with auto-face detection");
 
         Gson gson = new Gson();
-
+        System.err.println("Daaaji yeta chha");
         // Put the image into an input stream for detection.
         ByteArrayOutputStream output = new ByteArrayOutputStream();
         mBitmap.compress(Bitmap.CompressFormat.JPEG, 100, output);
         ByteArrayInputStream inputStream = new ByteArrayInputStream(output.toByteArray());
-
+        System.err.println("Daaaji hoooorii yeha chha");
         long startTime = System.currentTimeMillis();
         // -----------------------------------------------------------------------
         // KEY SAMPLE CODE STARTS HERE
         // -----------------------------------------------------------------------
-
+        System.err.println("Daaaji hooooooooooooooooooooooori yeta chha");
         List<RecognizeResult> result = null;
         //
         // Detect emotion by auto-detecting faces in the image.
         //
         result = this.client.recognizeImage(inputStream);
-
+        System.err.println("Daji yeta aayena jasto chha  :D ");
         String json = gson.toJson(result);
         Log.d("result", json);
 
