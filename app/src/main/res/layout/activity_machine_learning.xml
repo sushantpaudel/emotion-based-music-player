@@ -1,21 +1,36 @@
 <?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:orientation="vertical" android:layout_width="match_parent"
-    android:layout_height="match_parent"
+    android:layout_height="wrap_content"
     android:gravity="center">
+
     <Button
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:id="@+id/buttonMachine"
         android:text="@string/select_an_image"
         android:onClick="selectImage"/>
-    <EditText
+
+    <ProgressBar
+        android:id="@+id/progressBarMachine"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:visibility="gone" />
+
+    <TextView
         android:id="@+id/editTextMachine"
         android:layout_width="match_parent"
+        android:padding="5dp"
+        android:textColor="#000"
         android:layout_height="wrap_content"/>
+
     <ImageView
         android:layout_width="200dp"
         android:layout_height="200dp"
         android:scaleType="fitCenter"
         android:id="@+id/selectedImage"/>
 </LinearLayout>
+</ScrollView>

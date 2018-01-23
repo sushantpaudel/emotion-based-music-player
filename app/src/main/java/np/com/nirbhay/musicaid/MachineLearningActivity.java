@@ -14,8 +14,9 @@ import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
-import android.widget.EditText;
 import android.widget.ImageView;
+import android.widget.ProgressBar;
+import android.widget.TextView;
 
 import com.google.gson.Gson;
 import com.microsoft.projectoxford.emotion.EmotionServiceClient;
@@ -48,11 +49,12 @@ public class MachineLearningActivity extends AppCompatActivity {
     // The URI of the image selected to detect.
     private Uri mImageUri;
 
+    private ProgressBar progressBar;
     // The image selected to detect.
     private Bitmap mBitmap;
 
     // The edit to show status and result.
-    private EditText mEditText;
+    private TextView mEditText;
 
     private EmotionServiceClient client;
 
@@ -63,10 +65,12 @@ public class MachineLearningActivity extends AppCompatActivity {
         mEditText = findViewById(R.id.editTextMachine);
         mButtonSelectImage = findViewById(R.id.buttonMachine);
         client = new EmotionServiceRestClient(getString(R.string.subscription_key));
+        progressBar = findViewById(R.id.progressBarMachine);
     }
 
     public void doRecognize() {
         mButtonSelectImage.setEnabled(false);
+        progressBar.setVisibility(View.VISIBLE);
         // Do emotion detection using auto-detected faces.
         try {
             new doRequest(false).execute();
@@ -76,7 +80,7 @@ public class MachineLearningActivity extends AppCompatActivity {
 
         String faceSubscriptionKey = getString(R.string.faceSubscription_key);
         if (faceSubscriptionKey.equalsIgnoreCase("6c20b27b1926415cba4594ba4251c788")) {
-            mEditText.append("\n\nThere is no face subscription key in res/values/strings.xml. Skip the sample for detecting emotions using face rectangles\n");
+            System.err.println("There is no face subscription key in res/values/strings.xml. Skip the sample for detecting emotions using face rectangles");
         } else {
             // Do emotion detection using face rectangles provided by Face API.
             try {
@@ -245,6 +249,7 @@ public class MachineLearningActivity extends AppCompatActivity {
                 if (result.size() == 0) {
                     mEditText.append("No emotion detected :(");
                 } else {
+                    progressBar.setVisibility(View.GONE);
                     Integer count = 0;
                     // Covert bitmap to a mutable bitmap by copying it
                     Bitmap bitmapCopy = mBitmap.copy(Bitmap.Config.ARGB_8888, true);
@@ -276,9 +281,7 @@ public class MachineLearningActivity extends AppCompatActivity {
                     ImageView imageView = findViewById(R.id.selectedImage);
                     imageView.setImageDrawable(new BitmapDrawable(getResources(), mBitmap));
                 }
-                mEditText.setSelection(0);
             }
-
             mButtonSelectImage.setEnabled(true);
         }
     }
