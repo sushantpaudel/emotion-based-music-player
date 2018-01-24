@@ -142,15 +142,32 @@ public class MainActivity extends AppCompatActivity {
         RecyclerView mRecyclerView = findViewById(R.id.recyclerViewMain);
         RecyclerView.LayoutManager mLayoutManager = new LinearLayoutManager(this);
         mRecyclerView.setLayoutManager(mLayoutManager);
-        MainActivityRecyclerViewAdapter adapter = new SadSongRecyclerViewAdapter(this, data);
+        final MainActivityRecyclerViewAdapter adapter = new MainActivityRecyclerViewAdapter(this, data);
+        android.support.design.widget.FloatingActionButton fab = findViewById(R.id.floatingActionButton);
+        fab.setImageResource(R.drawable.sad_emoji);
+        fab.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                adapter.releasePlayer();
+            }
+        });
         mRecyclerView.setAdapter(adapter);
     }
+
 
     private void addToRecyclerHappySong(ArrayList<MusicDescription> data) {
         RecyclerView mRecyclerView = findViewById(R.id.recyclerViewMain);
         RecyclerView.LayoutManager mLayoutManager = new LinearLayoutManager(this);
         mRecyclerView.setLayoutManager(mLayoutManager);
-        MainActivityRecyclerViewAdapter adapter = new HappySongRecyclerViewAdapter(this, data);
+        final MainActivityRecyclerViewAdapter adapter = new MainActivityRecyclerViewAdapter(this, data);
+        android.support.design.widget.FloatingActionButton fab = findViewById(R.id.floatingActionButton);
+        fab.setImageResource(R.drawable.laugh_emoji);
+        fab.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                adapter.releasePlayer();
+            }
+        });
         mRecyclerView.setAdapter(adapter);
     }
 }

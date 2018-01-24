@@ -2,6 +2,8 @@ package np.com.nirbhay.musicaid.adapter;
 
 import android.content.Context;
 import android.graphics.Bitmap;
+import android.media.MediaPlayer;
+import android.net.Uri;
 import android.support.v7.widget.CardView;
 import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
@@ -28,7 +30,7 @@ import static android.support.v4.content.res.ResourcesCompat.getDrawable;
 public class MainActivityRecyclerViewAdapter extends RecyclerView.Adapter<MainActivityRecyclerViewAdapter.ViewHolder> {
     private Context context;
     private ArrayList<MusicDescription> mData;
-
+    private MediaPlayer mediaPlayer;
     public MainActivityRecyclerViewAdapter(Context context, ArrayList<MusicDescription> data) {
         this.context = context;
         this.mData = data;
@@ -54,10 +56,16 @@ public class MainActivityRecyclerViewAdapter extends RecyclerView.Adapter<MainAc
         }
         textView.setText(musicDescription);
         final int finalPosition = position;
+        final String path = mData.get(finalPosition).getMusicData();
         holder.mCardView.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                //TODO play music by clicking it...
+                if(mediaPlayer!=null){
+                    releasePlayer();
+                }
+                mediaPlayer = MediaPlayer.create(context,Uri.parse(path));
+                mediaPlayer.setLooping(true);
+                mediaPlayer.start();
             }
         });
 
@@ -78,12 +86,18 @@ public class MainActivityRecyclerViewAdapter extends RecyclerView.Adapter<MainAc
         notifyItemRemoved(position);
     }
 
-    public class ViewHolder extends RecyclerView.ViewHolder {
-        public CardView mCardView;
-        public TextView mTextView;
-        public ImageView mImageView;
+    public void releasePlayer(){
+        try{
+            mediaPlayer.release();
+        }catch (Exception ignored){}
+    }
 
-        public ViewHolder(View itemView) {
+    class ViewHolder extends RecyclerView.ViewHolder {
+        CardView mCardView;
+        TextView mTextView;
+        ImageView mImageView;
+
+        ViewHolder(View itemView) {
             super(itemView);
             mCardView = (CardView) itemView.findViewById(R.id.cardViewMusicMain);
             mImageView = (ImageView) itemView.findViewById(R.id.imageAlbumArt);
