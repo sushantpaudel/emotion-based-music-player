@@ -57,17 +57,7 @@ public class MainActivityRecyclerViewAdapter extends RecyclerView.Adapter<MainAc
         holder.mCardView.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-//                ActiveAndroid.initialize(context);
-//                SadSongModel song = new SadSongModel();
-//                HappySongModel song = new HappySongModel();
-//                MusicDescription music = mData.get(finalPosition);
-//                song.path = music.getMusicData();
-//                song.title_name = music.getTitleName();
-//                song.display_name = music.getDisplayName();
-//                song.duration = music.getDuration();
-//                song.albumId = music.getAlbumId();
-//                song.artistName = music.getArtistName();
-//                song.save();
+                //TODO play music by clicking it...
             }
         });
 

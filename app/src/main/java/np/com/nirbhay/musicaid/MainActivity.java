@@ -41,24 +41,19 @@ public class MainActivity extends AppCompatActivity {
             setSupportActionBar(toolbar);
         }
         ActiveAndroid.initialize(this);
-        FloatingActionButton fabSad = findViewById(R.id.sad_menu_item);
-        FloatingActionButton fabHappy = findViewById(R.id.happy_menu_item);
-        fabSad.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                ArrayList<MusicDescription> data = changePathSadSong(new SadSongModel().getAllList());
-                System.err.println(data.size());
-                addToRecyclerSadSong(data);
-            }
-        });
-        fabHappy.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                ArrayList<MusicDescription> data = changePathHappySong(new HappySongModel().getAllList());
-                System.err.println(data.size());
-                addToRecyclerHappySong(data);
-            }
-        });
+        int FLAG = getIntent().getIntExtra("FLAG",0);
+        System.err.println("flag --> "+FLAG);
+        switch (FLAG){
+            case 1:
+                ArrayList<MusicDescription> sadData = changePathSadSong(new SadSongModel().getAllList());
+                System.err.println(sadData.size());
+                addToRecyclerSadSong(sadData);
+                break;
+            case 2:
+                ArrayList<MusicDescription> happyData = changePathHappySong(new HappySongModel().getAllList());
+                System.err.println(happyData.size());
+                addToRecyclerHappySong(happyData);
+        }
     }
 
     @Override

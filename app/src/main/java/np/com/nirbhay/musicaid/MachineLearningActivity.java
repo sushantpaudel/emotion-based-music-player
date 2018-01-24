@@ -295,6 +295,18 @@ public class MachineLearningActivity extends AppCompatActivity {
                                 r.faceRectangle.top + r.faceRectangle.height,
                                 paint);
                         count++;
+                        double sadness = r.scores.sadness;
+                        double happiness = r.scores.happiness;
+                        Intent intent = new Intent(MachineLearningActivity.this,MainActivity.class);
+                        if(sadness > happiness){
+                            intent.putExtra("FLAG",1);
+                        }else{
+                            intent.putExtra("FLAG",2);
+                        }
+                        startActivity(intent);
+
+
+
                         break;
                     }
                     ImageView imageView = findViewById(R.id.selectedImage);

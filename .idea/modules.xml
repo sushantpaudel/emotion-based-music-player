@@ -2,10 +2,11 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
+      <module fileurl="file://$PROJECT_DIR$/MusicAid.iml" filepath="$PROJECT_DIR$/MusicAid.iml" />
       <module fileurl="file://C:\Users\user\AndroidStudioProjects\music-aid\MusicAid.iml" filepath="C:\Users\user\AndroidStudioProjects\music-aid\MusicAid.iml" />
       <module fileurl="file://$PROJECT_DIR$/app/app.iml" filepath="$PROJECT_DIR$/app/app.iml" />
       <module fileurl="file://C:\Users\user\AndroidStudioProjects\music-aid\app\app.iml" filepath="C:\Users\user\AndroidStudioProjects\music-aid\app\app.iml" />
-      <module fileurl="file://$PROJECT_DIR$/music-aid.iml" filepath="$PROJECT_DIR$/music-aid.iml" />
+      <module fileurl="file://C:\Users\susha\AndroidStudioProjects\MusicAid\music-aid.iml" filepath="C:\Users\susha\AndroidStudioProjects\MusicAid\music-aid.iml" />
     </modules>
   </component>
 </project>
