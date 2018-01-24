@@ -28,16 +28,24 @@
 
         <activity
             android:name=".MainActivity"
-            android:theme="@style/AppTheme.NoActionBar">
+            android:label="Music Aid"
+            android:theme="@style/Theme.AppCompat.Light.NoActionBar">
+
+        </activity>
+        <activity
+            android:name=".DatabaseActivity"
+            android:label="Database">
+
+        </activity>
+
+        <activity android:name=".MachineLearningActivity"
+            android:label="Music Aid">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-
-        <activity android:name=".MachineLearningActivity"
-            android:label="Machine Learning Activity"/>
     </application>
 
 </manifest>

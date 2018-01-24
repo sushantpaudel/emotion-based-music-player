@@ -10,9 +10,12 @@ import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
+import android.view.Menu;
+import android.view.MenuItem;
 import android.view.View;
 import android.widget.ProgressBar;
 import android.widget.Toast;
+import android.widget.Toolbar;
 
 import com.activeandroid.ActiveAndroid;
 import com.github.clans.fab.FloatingActionButton;
@@ -33,11 +36,13 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        addMusicToList();
+        android.support.v7.widget.Toolbar toolbar = findViewById(R.id.toolbar);
+        if(toolbar!=null){
+            setSupportActionBar(toolbar);
+        }
         ActiveAndroid.initialize(this);
         FloatingActionButton fabSad = findViewById(R.id.sad_menu_item);
         FloatingActionButton fabHappy = findViewById(R.id.happy_menu_item);
-        FloatingActionButton fabLaughy = findViewById(R.id.laugh_menu_item);
         fabSad.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -54,12 +59,30 @@ public class MainActivity extends AppCompatActivity {
                 addToRecyclerHappySong(data);
             }
         });
-        fabLaughy.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                startActivity(new Intent(MainActivity.this,MachineLearningActivity.class));
-            }
-        });
+    }
+
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        getMenuInflater().inflate(R.menu.menu_main, menu);
+        return true;
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        int itemId = item.getItemId();
+        switch(itemId){
+            case R.id.sadSong:
+                Intent sadIntent = new Intent(MainActivity.this,DatabaseActivity.class);
+                sadIntent.putExtra("FLAG",1);
+                startActivity(sadIntent);
+                break;
+            case R.id.happySong:
+                Intent happyIntent = new Intent(MainActivity.this,DatabaseActivity.class);
+                happyIntent.putExtra("FLAG",2);
+                startActivity(happyIntent);
+                break;
+        }
+        return super.onOptionsItemSelected(item);
     }
 
     private void showToast(String s) {
@@ -96,57 +119,6 @@ public class MainActivity extends AppCompatActivity {
             musicDescription.add(music);
         }
         return musicDescription;
-    }
-
-    private void addMusicToList() {
-        new Thread(new Runnable() {
-            @Override
-            public void run() {
-                final ArrayList<MusicDescription> data = listAllMusicFiles();
-                runOnUiThread(new Runnable() {
-                    @Override
-                    public void run() {
-                        ProgressBar progressBar = findViewById(R.id.progressBarMain);
-                        progressBar.setVisibility(View.GONE);
-                        addToRecyclerMain(data);
-                    }
-                });
-            }
-        }).start();
-    }
-
-    private ArrayList<MusicDescription> listAllMusicFiles() {
-        String selection = MediaStore.Audio.Media.IS_MUSIC + " != 0";
-
-        String[] projection = {
-                MediaStore.Audio.Media.ALBUM_ID,
-                MediaStore.Audio.Media.ARTIST,
-                MediaStore.Audio.Media.TITLE,
-                MediaStore.Audio.Media.DATA,
-                MediaStore.Audio.Media.DISPLAY_NAME,
-                MediaStore.Audio.Media.DURATION
-        };
-
-        Cursor cursor = this.managedQuery(
-                MediaStore.Audio.Media.EXTERNAL_CONTENT_URI,
-                projection,
-                selection,
-                null,
-                null);
-
-        ArrayList<MusicDescription> songs = new ArrayList<>();
-        while (cursor.moveToNext()) {
-            MusicDescription music = new MusicDescription();
-            music.setAlbumId(cursor.getInt(0));
-            music.setArtistName(cursor.getString(1));
-            music.setTitleName(cursor.getString(2));
-            music.setMusicData(cursor.getString(3));
-            music.setDisplayName(cursor.getString(4));
-            music.setDuration(cursor.getInt(5));
-            music.setAlbumArt(albumArt(cursor.getInt(0)));
-            songs.add(music);
-        }
-        return songs;
     }
 
     private Bitmap albumArt(int albumId) {

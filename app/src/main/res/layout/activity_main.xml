@@ -64,13 +64,6 @@
         android:id="@+id/include"
         layout="@layout/content_main" />
 
-    <ProgressBar
-        android:id="@+id/progressBarMain"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_gravity="bottom|center_horizontal"
-        android:layout_marginBottom="100dp" />
-
     <com.github.clans.fab.FloatingActionMenu
         android:id="@+id/menu"
         android:layout_width="wrap_content"
@@ -128,13 +121,6 @@
             android:src="@drawable/happy_emoji"
             fab:fab_size="mini"
             fab:fab_label="Happy" />
-        <com.github.clans.fab.FloatingActionButton
-            android:id="@+id/laugh_menu_item"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:src="@drawable/laugh_emoji"
-            fab:fab_size="mini"
-            fab:fab_label="Laugh" />
 
     </com.github.clans.fab.FloatingActionMenu>
 
