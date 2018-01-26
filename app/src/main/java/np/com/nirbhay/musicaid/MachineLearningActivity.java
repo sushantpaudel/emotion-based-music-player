@@ -2,10 +2,12 @@ package np.com.nirbhay.musicaid;
 
 import android.Manifest;
 import android.annotation.SuppressLint;
+import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.ImageFormat;
@@ -40,13 +42,12 @@ import android.view.MenuItem;
 import android.view.Surface;
 import android.view.TextureView;
 import android.view.View;
-import android.widget.Button;
 import android.widget.ProgressBar;
-import android.widget.TextView;
 import android.widget.Toast;
 
 import com.google.gson.Gson;
 import com.microsoft.projectoxford.emotion.EmotionServiceClient;
+import com.microsoft.projectoxford.emotion.EmotionServiceRestClient;
 import com.microsoft.projectoxford.emotion.contract.FaceRectangle;
 import com.microsoft.projectoxford.emotion.contract.RecognizeResult;
 import com.microsoft.projectoxford.emotion.rest.EmotionServiceException;
@@ -56,6 +57,7 @@ import com.microsoft.projectoxford.face.contract.Face;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -69,45 +71,49 @@ import np.com.nirbhay.musicaid.CognitiveEmotion.ImageHelper;
 
 
 @SuppressLint("NewApi")
-public class CameraController extends AppCompatActivity {
+public class MachineLearningActivity extends AppCompatActivity {
     private static final int REQUEST_SELECT_IMAGE = 13;
-    private Button mButtonSelectImage;
+    private FloatingActionButton mButtonSelectImage;
     private Uri mImageUri;
     private ProgressBar progressBar;
     private Bitmap mBitmap;
     private Context context = this;
-    private TextView mEditText;
     private EmotionServiceClient client;
     private static final String TAG = "CameraController";
     private TextureView textureView;
     private static final SparseIntArray ORIENTATIONS = new SparseIntArray();
+
     static {
-        ORIENTATIONS.append(Surface.ROTATION_0, 90);
-        ORIENTATIONS.append(Surface.ROTATION_90, 0);
-        ORIENTATIONS.append(Surface.ROTATION_180, 270);
-        ORIENTATIONS.append(Surface.ROTATION_270, 180);
+        ORIENTATIONS.append(Surface.ROTATION_0, 0);
+        ORIENTATIONS.append(Surface.ROTATION_90, 90);
+        ORIENTATIONS.append(Surface.ROTATION_180, 180);
+        ORIENTATIONS.append(Surface.ROTATION_270, 270);
     }
+
     private String cameraId;
     protected CameraDevice cameraDevice;
     protected CameraCaptureSession cameraCaptureSessions;
-    protected CaptureRequest captureRequest;
     protected CaptureRequest.Builder captureRequestBuilder;
     private Size imageDimension;
+    private int cameraID = 1;
+    private boolean isCameraChanged = false;
     private ImageReader imageReader;
-    private File file;
     private static final int REQUEST_CAMERA_PERMISSION = 200;
-    private boolean mFlashSupported;
     private Handler mBackgroundHandler;
     private HandlerThread mBackgroundThread;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_machine_learning);
-        textureView = (TextureView) findViewById(R.id.textureViewMachine);
+        textureView = findViewById(R.id.textureViewMachine);
         assert textureView != null;
         textureView.setSurfaceTextureListener(textureListener);
+        client = new EmotionServiceRestClient(getString(R.string.subscription_key));
+        progressBar = findViewById(R.id.progressBarMachine);
+        FloatingActionButton changeCamera = findViewById(R.id.flipCamera);
         FloatingActionButton takePictureButton = findViewById(R.id.captureImage);
-        FloatingActionButton selectPictureButton= findViewById(R.id.selectImage);
+        mButtonSelectImage = findViewById(R.id.selectImage);
         assert takePictureButton != null;
         takePictureButton.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -115,29 +121,61 @@ public class CameraController extends AppCompatActivity {
                 takePicture();
             }
         });
-        selectPictureButton.setOnClickListener(new View.OnClickListener() {
+        mButtonSelectImage.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                selectPicture();
+                selectImage();
             }
         });
+        changeCamera.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if (cameraID == 0) {
+                    cameraID = 1;
+                    isCameraChanged = true;
+                } else {
+                    cameraID = 0;
+                    isCameraChanged = true;
+                }
+                textureView.clearAnimation();
+                textureView.setSurfaceTextureListener(textureListener);
+            }
+        });
+
     }
+
     TextureView.SurfaceTextureListener textureListener = new TextureView.SurfaceTextureListener() {
         @Override
         public void onSurfaceTextureAvailable(SurfaceTexture surface, int width, int height) {
             //open your camera here
             openCamera();
         }
+
         @Override
         public void onSurfaceTextureSizeChanged(SurfaceTexture surface, int width, int height) {
             // Transform you image captured size according to the surface width and height
         }
+
         @Override
         public boolean onSurfaceTextureDestroyed(SurfaceTexture surface) {
             return false;
         }
+
         @Override
         public void onSurfaceTextureUpdated(SurfaceTexture surface) {
+            if (isCameraChanged) {
+                openCamera();
+                new Thread(new Runnable() {
+                    @Override
+                    public void run() {
+                        try {
+                            Thread.sleep(1000L);
+                            isCameraChanged = false;
+                        } catch (InterruptedException ignored) {
+                        }
+                    }
+                }).start();
+            }
         }
     };
     private final CameraDevice.StateCallback stateCallback = new CameraDevice.StateCallback() {
@@ -148,41 +186,43 @@ public class CameraController extends AppCompatActivity {
             cameraDevice = camera;
             createCameraPreview();
         }
+
         @Override
         public void onDisconnected(CameraDevice camera) {
             cameraDevice.close();
         }
+
         @Override
         public void onError(CameraDevice camera, int error) {
             cameraDevice.close();
             cameraDevice = null;
         }
     };
-    final CameraCaptureSession.CaptureCallback captureCallbackListener = new CameraCaptureSession.CaptureCallback() {
-        @Override
-        public void onCaptureCompleted(CameraCaptureSession session, CaptureRequest request, TotalCaptureResult result) {
-            super.onCaptureCompleted(session, request, result);
-            Toast.makeText(CameraController.this, "Saved:" + file, Toast.LENGTH_SHORT).show();
-            createCameraPreview();
-        }
-    };
+
     protected void startBackgroundThread() {
         mBackgroundThread = new HandlerThread("Camera Background");
         mBackgroundThread.start();
         mBackgroundHandler = new Handler(mBackgroundThread.getLooper());
     }
+
     protected void stopBackgroundThread() {
-        mBackgroundThread.quitSafely();
+        if (mBackgroundThread != null) {
+            mBackgroundThread.quitSafely();
+        }
         try {
+            assert mBackgroundThread != null;
             mBackgroundThread.join();
             mBackgroundThread = null;
             mBackgroundHandler = null;
         } catch (InterruptedException e) {
             e.printStackTrace();
+        } catch (NullPointerException e) {
+            e.printStackTrace();
         }
     }
+
     protected void takePicture() {
-        if(null == cameraDevice) {
+        if (null == cameraDevice) {
             Log.e(TAG, "cameraDevice is null");
             return;
         }
@@ -209,13 +249,13 @@ public class CameraController extends AppCompatActivity {
             // Orientation
             int rotation = getWindowManager().getDefaultDisplay().getRotation();
             captureBuilder.set(CaptureRequest.JPEG_ORIENTATION, ORIENTATIONS.get(rotation));
-            final File file = new File(Environment.getExternalStorageDirectory()+"/pic.jpg");
+            final File file = new File(Environment.getExternalStorageDirectory() + "/pic1" + System.currentTimeMillis() + ".jpg");
             ImageReader.OnImageAvailableListener readerListener = new ImageReader.OnImageAvailableListener() {
                 @Override
                 public void onImageAvailable(ImageReader reader) {
                     Image image = null;
                     try {
-                        image = reader.acquireLatestImage();
+                        image = reader.acquireNextImage();
                         ByteBuffer buffer = image.getPlanes()[0].getBuffer();
                         byte[] bytes = new byte[buffer.capacity()];
                         buffer.get(bytes);
@@ -230,6 +270,7 @@ public class CameraController extends AppCompatActivity {
                         }
                     }
                 }
+
                 private void save(byte[] bytes) throws IOException {
                     OutputStream output = null;
                     try {
@@ -247,8 +288,20 @@ public class CameraController extends AppCompatActivity {
                 @Override
                 public void onCaptureCompleted(CameraCaptureSession session, CaptureRequest request, TotalCaptureResult result) {
                     super.onCaptureCompleted(session, request, result);
-                    Toast.makeText(CameraController.this, "Saved:" + file, Toast.LENGTH_SHORT).show();
-                    createCameraPreview();
+//                    Toast.makeText(context, "Saved:" + file, Toast.LENGTH_SHORT).show();
+                    try {
+                        BitmapFactory.Options options = new BitmapFactory.Options();
+                        options.inPreferredConfig = Bitmap.Config.ARGB_8888;
+                        mBitmap = BitmapFactory.decodeStream(new FileInputStream(file), null, options);
+                        System.err.println("Image Captured!!");
+//                        mBitmap = textureView.getBitmap();
+//                        stopBackgroundThread();
+                        doRecognize();
+                        createCameraPreview();
+                    } catch (Exception e) {
+                        System.err.println("NoImage");
+                        e.printStackTrace();
+                    }
                 }
             };
             cameraDevice.createCaptureSession(outputSurfaces, new CameraCaptureSession.StateCallback() {
@@ -260,6 +313,7 @@ public class CameraController extends AppCompatActivity {
                         e.printStackTrace();
                     }
                 }
+
                 @Override
                 public void onConfigureFailed(CameraCaptureSession session) {
                 }
@@ -267,7 +321,8 @@ public class CameraController extends AppCompatActivity {
         } catch (CameraAccessException e) {
             e.printStackTrace();
         }
-    }}
+    }
+
     protected void createCameraPreview() {
         try {
             SurfaceTexture texture = textureView.getSurfaceTexture();
@@ -276,7 +331,7 @@ public class CameraController extends AppCompatActivity {
             Surface surface = new Surface(texture);
             captureRequestBuilder = cameraDevice.createCaptureRequest(CameraDevice.TEMPLATE_PREVIEW);
             captureRequestBuilder.addTarget(surface);
-            cameraDevice.createCaptureSession(Arrays.asList(surface), new CameraCaptureSession.StateCallback(){
+            cameraDevice.createCaptureSession(Arrays.asList(surface), new CameraCaptureSession.StateCallback() {
                 @Override
                 public void onConfigured(@NonNull CameraCaptureSession cameraCaptureSession) {
                     //The camera is already closed
@@ -287,27 +342,28 @@ public class CameraController extends AppCompatActivity {
                     cameraCaptureSessions = cameraCaptureSession;
                     updatePreview();
                 }
+
                 @Override
                 public void onConfigureFailed(@NonNull CameraCaptureSession cameraCaptureSession) {
-                    Toast.makeText(CameraController.this, "Configuration change", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(context, "Configuration change", Toast.LENGTH_SHORT).show();
                 }
             }, null);
         } catch (CameraAccessException e) {
             e.printStackTrace();
         }
     }
+
     private void openCamera() {
         CameraManager manager = (CameraManager) getSystemService(Context.CAMERA_SERVICE);
         Log.e(TAG, "is camera open");
         try {
-            cameraId = manager.getCameraIdList()[0];
+            cameraId = manager.getCameraIdList()[cameraID];
             CameraCharacteristics characteristics = manager.getCameraCharacteristics(cameraId);
             StreamConfigurationMap map = characteristics.get(CameraCharacteristics.SCALER_STREAM_CONFIGURATION_MAP);
             assert map != null;
             imageDimension = map.getOutputSizes(SurfaceTexture.class)[0];
-            // Add permission for camera and let user grant the permission
             if (ActivityCompat.checkSelfPermission(this, Manifest.permission.CAMERA) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
-                ActivityCompat.requestPermissions(CameraController.this, new String[]{Manifest.permission.CAMERA, Manifest.permission.WRITE_EXTERNAL_STORAGE}, REQUEST_CAMERA_PERMISSION);
+                ActivityCompat.requestPermissions((Activity) context, new String[]{Manifest.permission.CAMERA, Manifest.permission.WRITE_EXTERNAL_STORAGE}, REQUEST_CAMERA_PERMISSION);
                 return;
             }
             manager.openCamera(cameraId, stateCallback, null);
@@ -316,8 +372,9 @@ public class CameraController extends AppCompatActivity {
         }
         Log.e(TAG, "openCamera X");
     }
+
     protected void updatePreview() {
-        if(null == cameraDevice) {
+        if (null == cameraDevice) {
             Log.e(TAG, "updatePreview error, return");
         }
         captureRequestBuilder.set(CaptureRequest.CONTROL_MODE, CameraMetadata.CONTROL_MODE_AUTO);
@@ -325,8 +382,10 @@ public class CameraController extends AppCompatActivity {
             cameraCaptureSessions.setRepeatingRequest(captureRequestBuilder.build(), null, mBackgroundHandler);
         } catch (CameraAccessException e) {
             e.printStackTrace();
+        } catch (IllegalStateException ignored) {
         }
     }
+
     private void closeCamera() {
         if (null != cameraDevice) {
             cameraDevice.close();
@@ -337,19 +396,22 @@ public class CameraController extends AppCompatActivity {
             imageReader = null;
         }
     }
+
     @Override
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
         if (requestCode == REQUEST_CAMERA_PERMISSION) {
             if (grantResults[0] == PackageManager.PERMISSION_DENIED) {
                 // close the app
-                Toast.makeText(CameraController.this, "Sorry!!!, you can't use this app without granting permission", Toast.LENGTH_LONG).show();
+                Toast.makeText(context, "Sorry!!!, you can't use this app without granting permission", Toast.LENGTH_LONG).show();
                 finish();
             }
         }
     }
+
     @Override
     protected void onResume() {
         super.onResume();
+        closeCamera();
         Log.e(TAG, "onResume");
         startBackgroundThread();
         if (textureView.isAvailable()) {
@@ -358,10 +420,14 @@ public class CameraController extends AppCompatActivity {
             textureView.setSurfaceTextureListener(textureListener);
         }
     }
+
     @Override
     protected void onPause() {
         Log.e(TAG, "onPause");
-        //closeCamera();
+        TextureView txt = findViewById(R.id.textureViewMachine);
+        txt.setVisibility(View.VISIBLE);
+        progressBar.setVisibility(View.GONE);
+        closeCamera();
         stopBackgroundThread();
         super.onPause();
     }
@@ -371,31 +437,26 @@ public class CameraController extends AppCompatActivity {
         return true;
     }
 
-    private void takePicture() {
-
-    }
-
-
-
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         int itemId = item.getItemId();
-        switch(itemId){
+        switch (itemId) {
             case R.id.mainActivity:
-                startActivity(new Intent(MachineLearningActivity.this,MainActivity.class));
+                startActivity(new Intent(MachineLearningActivity.this, MainActivity.class));
             default:
                 return super.onOptionsItemSelected(item);
         }
     }
 
     public void doRecognize() {
-        mButtonSelectImage.setEnabled(false);
+        stopBackgroundThread();
+        System.err.println("Recognition Started!!");
         progressBar.setVisibility(View.VISIBLE);
         // Do emotion detection using auto-detected faces.
         try {
             new MachineLearningActivity.doRequest(false).execute();
         } catch (Exception e) {
-            mEditText.append("Error encountered. Exception is: " + e.toString());
+            System.err.println("Error encountered. Exception is: " + e.toString());
         }
 
         String faceSubscriptionKey = getString(R.string.faceSubscription_key);
@@ -406,17 +467,17 @@ public class CameraController extends AppCompatActivity {
             try {
                 new MachineLearningActivity.doRequest(true).execute();
             } catch (Exception e) {
-                mEditText.append("Error encountered. Exception is: " + e.toString());
+                System.err.println("Error encountered. Exception is: " + e.toString());
             }
         }
     }
 
     public void selectImage() {
-        mEditText.setText("");
         Intent intent = new Intent(Intent.ACTION_PICK,
                 android.provider.MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
-        startActivityForResult(intent,REQUEST_SELECT_IMAGE);
+        startActivityForResult(intent, REQUEST_SELECT_IMAGE);
     }
+
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         Log.d("RecognizeActivity", "onActivityResult");
@@ -425,7 +486,6 @@ public class CameraController extends AppCompatActivity {
                 if (resultCode == RESULT_OK) {
                     // If image is selected successfully, set the image URI and bitmap.
                     mImageUri = data.getData();
-
                     mBitmap = ImageHelper.loadSizeLimitedBitmapFromUri(
                             mImageUri, getContentResolver());
                     if (mBitmap != null) {
@@ -522,39 +582,38 @@ public class CameraController extends AppCompatActivity {
         return result;
     }
 
-private class doRequest extends AsyncTask<String, String, List<RecognizeResult>> {
-    // Store error message
-    private Exception e = null;
-    private boolean useFaceRectangles = false;
+    private class doRequest extends AsyncTask<String, String, List<RecognizeResult>> {
+        // Store error message
+        private Exception e = null;
+        private boolean useFaceRectangles = false;
 
-    public doRequest(boolean useFaceRectangles) {
-        this.useFaceRectangles = useFaceRectangles;
-    }
-
-    @Override
-    protected List<RecognizeResult> doInBackground(String... args) {
-        if (!this.useFaceRectangles) {
-            try {
-                return processWithAutoFaceDetection();
-            } catch (Exception e) {
-                this.e = e;    // Store error
-            }
-        } else {
-            try {
-                return processWithFaceRectangles();
-            } catch (Exception e) {
-                this.e = e;    // Store error
-            }
+        public doRequest(boolean useFaceRectangles) {
+            this.useFaceRectangles = useFaceRectangles;
         }
-        return null;
-    }
 
-    @SuppressLint("SetTextI18n")
-    @Override
-    protected void onPostExecute(List<RecognizeResult> result) {
-        super.onPostExecute(result);
+        @Override
+        protected List<RecognizeResult> doInBackground(String... args) {
+            if (!this.useFaceRectangles) {
+                try {
+                    return processWithAutoFaceDetection();
+                } catch (Exception e) {
+                    this.e = e;    // Store error
+                }
+            } else {
+                try {
+                    return processWithFaceRectangles();
+                } catch (Exception e) {
+                    this.e = e;    // Store error
+                }
+            }
+            return null;
+        }
+
+        @SuppressLint("SetTextI18n")
+        @Override
+        protected void onPostExecute(List<RecognizeResult> result) {
+            super.onPostExecute(result);
             if (result.size() == 0) {
-                mEditText.append("No emotion detected :(");
             } else {
                 progressBar.setVisibility(View.GONE);
                 Integer count = 0;
@@ -579,6 +638,7 @@ private class doRequest extends AsyncTask<String, String, List<RecognizeResult>>
                     mEditText.append(String.format("\t sadness: %1$.5f\n", r.scores.sadness));
                     mEditText.append(String.format("\t surprise: %1$.5f\n", r.scores.surprise));
                     mEditText.append(String.format("\t face rectangle: %d, %d, %d, %d", r.faceRectangle.left, r.faceRectangle.top, r.faceRectangle.width, r.faceRectangle.height));
+                    System.err.println(mEditText);
                     faceCanvas.drawRect(r.faceRectangle.left,
                             r.faceRectangle.top,
                             r.faceRectangle.left + r.faceRectangle.width,
@@ -587,14 +647,15 @@ private class doRequest extends AsyncTask<String, String, List<RecognizeResult>>
                     count++;
                     double sadness = r.scores.sadness;
                     double happiness = r.scores.happiness;
-                    Intent intent = new Intent(MachineLearningActivity.this,MainActivity.class);
-                    if(sadness > happiness){
-                        intent.putExtra("FLAG",1);
-                    }else{
-                        intent.putExtra("FLAG",2);
+                    Intent intent = new Intent(MachineLearningActivity.this, MainActivity.class);
+                    if (sadness > happiness) {
+                        Toast.makeText(context, "You 're sad!", Toast.LENGTH_SHORT).show();
+                        intent.putExtra("FLAG", 1);
+                    } else {
+                        Toast.makeText(context, "You 're happy!", Toast.LENGTH_SHORT).show();
+                        intent.putExtra("FLAG", 2);
                     }
                     startActivity(intent);
-
 
 
                     break;
@@ -602,7 +663,7 @@ private class doRequest extends AsyncTask<String, String, List<RecognizeResult>>
 //                    ImageView imageView = findViewById(R.id.selectedImage);
 //                    imageView.setImageDrawable(new BitmapDrawable(getResources(), mBitmap));
             }
-        mButtonSelectImage.setEnabled(true);
+            mButtonSelectImage.setEnabled(true);
+        }
     }
-}
 }

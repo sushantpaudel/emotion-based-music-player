@@ -3,6 +3,7 @@ package np.com.nirbhay.musicaid.active_android;
 import com.activeandroid.Model;
 import com.activeandroid.annotation.Column;
 import com.activeandroid.annotation.Table;
+import com.activeandroid.query.Delete;
 import com.activeandroid.query.Select;
 
 import java.util.List;
@@ -27,5 +28,9 @@ public class SadSongModel extends Model {
     public String artistName;
     public List<SadSongModel> getAllList(){
         return new Select().from(SadSongModel.class).execute();
+    }
+
+    public void deleteData(String path) {
+        new Delete().from(SadSongModel.class).where("music_path = ?", path).execute();
     }
 }

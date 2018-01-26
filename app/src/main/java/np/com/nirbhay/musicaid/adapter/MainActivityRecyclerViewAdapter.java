@@ -12,14 +12,10 @@ import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.TextView;
 
-import com.activeandroid.ActiveAndroid;
-
 import java.util.ArrayList;
 
-import np.com.nirbhay.musicaid.active_android.HappySongModel;
-import np.com.nirbhay.musicaid.data_set.MusicDescription;
 import np.com.nirbhay.musicaid.R;
-import np.com.nirbhay.musicaid.active_android.SadSongModel;
+import np.com.nirbhay.musicaid.data_set.MusicDescription;
 
 import static android.support.v4.content.res.ResourcesCompat.getDrawable;
 
@@ -30,7 +26,7 @@ import static android.support.v4.content.res.ResourcesCompat.getDrawable;
 public class MainActivityRecyclerViewAdapter extends RecyclerView.Adapter<MainActivityRecyclerViewAdapter.ViewHolder> {
     private Context context;
     private ArrayList<MusicDescription> mData;
-    private MediaPlayer mediaPlayer;
+    public static MediaPlayer mediaPlayer;
     public MainActivityRecyclerViewAdapter(Context context, ArrayList<MusicDescription> data) {
         this.context = context;
         this.mData = data;
@@ -86,7 +82,7 @@ public class MainActivityRecyclerViewAdapter extends RecyclerView.Adapter<MainAc
         notifyItemRemoved(position);
     }
 
-    public void releasePlayer(){
+    public static void releasePlayer() {
         try{
             mediaPlayer.release();
         }catch (Exception ignored){}

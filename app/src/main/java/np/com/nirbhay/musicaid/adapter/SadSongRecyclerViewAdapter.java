@@ -7,8 +7,6 @@ import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.activeandroid.ActiveAndroid;
-
 import java.util.ArrayList;
 
 import np.com.nirbhay.musicaid.R;
@@ -31,7 +29,7 @@ public class SadSongRecyclerViewAdapter extends MainActivityRecyclerViewAdapter 
     }
 
     @Override
-    public void onBindViewHolder(ViewHolder holder, int position) {
+    public void onBindViewHolder(ViewHolder holder, final int position) {
         TextView textView = holder.mTextView;
         ImageView imageView = holder.mImageView;
         final String musicDescription = mData.get(position).getMusicDescription();
@@ -47,6 +45,15 @@ public class SadSongRecyclerViewAdapter extends MainActivityRecyclerViewAdapter 
             @Override
             public void onClick(View v) {
                 Toast.makeText(context,mData.get(finalPosition).getDisplayName(),Toast.LENGTH_SHORT).show();
+            }
+        });
+        holder.mCardView.setOnLongClickListener(new View.OnLongClickListener() {
+            @Override
+            public boolean onLongClick(View v) {
+                new SadSongModel().deleteData(mData.get(position).getMusicData());
+                mData.remove(position);
+                notifyDataSetChanged();
+                return true;
             }
         });
     }

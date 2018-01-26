@@ -2,33 +2,30 @@ package np.com.nirbhay.musicaid;
 
 import android.content.ContentUris;
 import android.content.Intent;
-import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.net.Uri;
+import android.os.Bundle;
 import android.provider.MediaStore;
 import android.support.v7.app.AppCompatActivity;
-import android.os.Bundle;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
-import android.widget.ProgressBar;
 import android.widget.Toast;
-import android.widget.Toolbar;
 
 import com.activeandroid.ActiveAndroid;
-import com.github.clans.fab.FloatingActionButton;
 
 import java.util.ArrayList;
 import java.util.List;
 
 import np.com.nirbhay.musicaid.active_android.HappySongModel;
 import np.com.nirbhay.musicaid.active_android.SadSongModel;
-import np.com.nirbhay.musicaid.adapter.HappySongRecyclerViewAdapter;
 import np.com.nirbhay.musicaid.adapter.MainActivityRecyclerViewAdapter;
-import np.com.nirbhay.musicaid.adapter.SadSongRecyclerViewAdapter;
 import np.com.nirbhay.musicaid.data_set.MusicDescription;
+
+import static np.com.nirbhay.musicaid.adapter.MainActivityRecyclerViewAdapter.mediaPlayer;
+import static np.com.nirbhay.musicaid.adapter.MainActivityRecyclerViewAdapter.releasePlayer;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -60,6 +57,15 @@ public class MainActivity extends AppCompatActivity {
     public boolean onCreateOptionsMenu(Menu menu) {
         getMenuInflater().inflate(R.menu.menu_main, menu);
         return true;
+    }
+
+    @Override
+    public void onBackPressed() {
+        super.onBackPressed();
+        try {
+            mediaPlayer.release();
+        } catch (Exception ignored) {
+        }
     }
 
     @Override
@@ -148,7 +154,7 @@ public class MainActivity extends AppCompatActivity {
         fab.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                adapter.releasePlayer();
+                releasePlayer();
             }
         });
         mRecyclerView.setAdapter(adapter);
@@ -165,7 +171,7 @@ public class MainActivity extends AppCompatActivity {
         fab.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                adapter.releasePlayer();
+                releasePlayer();
             }
         });
         mRecyclerView.setAdapter(adapter);
