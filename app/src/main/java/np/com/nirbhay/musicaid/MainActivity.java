@@ -25,11 +25,14 @@ import np.com.nirbhay.musicaid.active_android.SadSongModel;
 import np.com.nirbhay.musicaid.adapter.MainActivityRecyclerViewAdapter;
 import np.com.nirbhay.musicaid.data_set.MusicDescription;
 
+import static np.com.nirbhay.musicaid.adapter.MainActivityRecyclerViewAdapter.mData;
 import static np.com.nirbhay.musicaid.adapter.MainActivityRecyclerViewAdapter.mediaPlayer;
+import static np.com.nirbhay.musicaid.adapter.MainActivityRecyclerViewAdapter.playingPosition;
 import static np.com.nirbhay.musicaid.adapter.MainActivityRecyclerViewAdapter.releasePlayer;
 
 public class MainActivity extends AppCompatActivity {
     private ImageView playPause;
+    private ImageView albumArt;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         EmotionCheckActivity.fromActivityResult = false;
@@ -50,19 +53,22 @@ public class MainActivity extends AppCompatActivity {
                 System.err.println(happyData.size());
                 addToRecyclerHappySong(happyData);
         }
-        ImageView nextSong = findViewById(R.id.imageViewNextButton);
-        ImageView previousSong = findViewById(R.id.imageViewPreviousButton);
+        final ImageView nextSong = findViewById(R.id.imageViewNextButton);
+        final ImageView previousSong = findViewById(R.id.imageViewPreviousButton);
         playPause = findViewById(R.id.imageViewPlayPauseButton);
+        albumArt = findViewById(R.id.imageViewAlbumArt);
         nextSong.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-
+                MainActivityRecyclerViewAdapter.nextSong();
+                setAlbumArt();
             }
         });
         previousSong.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-
+                MainActivityRecyclerViewAdapter.previousSong();
+                setAlbumArt();
             }
         });
         playPause.setOnClickListener(new View.OnClickListener() {
@@ -76,21 +82,48 @@ public class MainActivity extends AppCompatActivity {
                             mediaPlayer.start();
                         }
                     }
-                } catch (NullPointerException ignored) {
+                    setAlbumArt();
+                } catch (Exception ignored) {
                 }
             }
         });
     }
 
+    private void setAlbumArt() {
+        threadAlbumArt.start();
+    }
+
     void startBackgroundThread() {
-        thread.start();
+        threadPlayPauseButtons.start();
     }
 
     void stopBackgroundThread() {
-        thread.interrupt();
+        threadPlayPauseButtons.interrupt();
+        threadAlbumArt.interrupt();
     }
 
-    private Thread thread = new Thread(new Runnable() {
+    private Thread threadAlbumArt = new Thread(new Runnable() {
+        @Override
+        public void run() {
+            while (true) {
+                try {
+                    int albumId = mData.get(playingPosition).getAlbumId();
+                    final Bitmap bitmap = albumArt(albumId);
+                    runOnUiThread(new Runnable() {
+                        @Override
+                        public void run() {
+                            albumArt.setImageBitmap(bitmap);
+                        }
+                    });
+                } catch (Exception e) {
+                    break;
+                }
+
+            }
+        }
+    });
+
+    private Thread threadPlayPauseButtons = new Thread(new Runnable() {
         @Override
         public void run() {
             while (true) {
@@ -105,7 +138,8 @@ public class MainActivity extends AppCompatActivity {
                                 } else {
                                     playPause.setImageResource(R.drawable.ic_play);
                                 }
-                            } catch (Exception ignored) {
+                            } catch (Exception e) {
+                                playPause.setImageResource(R.drawable.ic_play);
                             }
                         }
                     });
@@ -120,6 +154,23 @@ public class MainActivity extends AppCompatActivity {
     public boolean onCreateOptionsMenu(Menu menu) {
         getMenuInflater().inflate(R.menu.menu_main, menu);
         return true;
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        startBackgroundThread();
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        try {
+            playingPosition = -1;
+            mediaPlayer.release();
+        } catch (Exception ignored) {
+        }
+        stopBackgroundThread();
     }
 
     @Override

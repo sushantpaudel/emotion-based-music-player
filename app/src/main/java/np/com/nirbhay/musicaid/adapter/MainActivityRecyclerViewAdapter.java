@@ -27,13 +27,16 @@ import static android.support.v4.content.res.ResourcesCompat.getDrawable;
 
 public class MainActivityRecyclerViewAdapter extends RecyclerView.Adapter<MainActivityRecyclerViewAdapter.ViewHolder> {
     private Context context;
-    private ArrayList<MusicDescription> mData;
+    public static Context c;
+    public static ArrayList<MusicDescription> mData;
     public static MediaPlayer mediaPlayer;
     private int FLAG;
+    public static int playingPosition = -1;
 
     public MainActivityRecyclerViewAdapter(Context context, ArrayList<MusicDescription> data, int FLAG) {
         this.context = context;
-        this.mData = data;
+        MainActivityRecyclerViewAdapter.c = context;
+        mData = data;
         this.FLAG = FLAG;
     }
 
@@ -56,17 +59,13 @@ public class MainActivityRecyclerViewAdapter extends RecyclerView.Adapter<MainAc
             imageView.setImageDrawable(getDrawable(context.getResources(), R.drawable.ic_audiofile,null));
         }
         textView.setText(musicDescription);
-        final int finalPosition = position;
+        final int finalPosition = holder.getAdapterPosition();
         final String path = mData.get(finalPosition).getMusicData();
         holder.mCardView.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                if(mediaPlayer!=null){
-                    releasePlayer();
-                }
-                mediaPlayer = MediaPlayer.create(context,Uri.parse(path));
-                mediaPlayer.setLooping(true);
-                mediaPlayer.start();
+                System.err.println(finalPosition);
+                startMusic(finalPosition);
             }
         });
         holder.mCardView.setOnLongClickListener(new View.OnLongClickListener() {
@@ -79,11 +78,22 @@ public class MainActivityRecyclerViewAdapter extends RecyclerView.Adapter<MainAc
                         new HappySongModel().deleteData(mData.get(finalPosition).getMusicData());
                 }
                 mData.remove(finalPosition);
-                notifyDataSetChanged();
+                notifyItemRemoved(finalPosition);
+                notifyItemRangeChanged(finalPosition, getItemCount());
+                mediaPlayer.release();
                 return true;
             }
         });
+    }
 
+    public static void startMusic(int position) {
+        if (mediaPlayer != null) {
+            releasePlayer();
+        }
+        mediaPlayer = MediaPlayer.create(c, Uri.parse(mData.get(position).getMusicData()));
+        mediaPlayer.setLooping(true);
+        mediaPlayer.start();
+        playingPosition = position;
     }
 
     @Override
@@ -108,10 +118,26 @@ public class MainActivityRecyclerViewAdapter extends RecyclerView.Adapter<MainAc
     }
 
     public static void nextSong() {
+        int size = mData.size();
+        size--;
+        if (playingPosition == size) {
+            playingPosition = 0;
+        } else {
+            playingPosition++;
+        }
+        startMusic(playingPosition);
         //TODO NEXT SONG
     }
 
     public static void previousSong() {
+        int size = mData.size();
+        size--;
+        if (playingPosition == 0) {
+            playingPosition = size;
+        } else {
+            playingPosition--;
+        }
+        startMusic(playingPosition);
         //TODO PREVIOUS SONG
     }
 
