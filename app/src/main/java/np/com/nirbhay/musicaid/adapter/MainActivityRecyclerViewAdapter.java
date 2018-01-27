@@ -44,6 +44,8 @@ public class MainActivityRecyclerViewAdapter extends RecyclerView.Adapter<MainAc
     public ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
         LayoutInflater layoutInflater = LayoutInflater.from(context);
         View view = layoutInflater.inflate(R.layout.recycler_music_description, parent, false);
+        mediaPlayer = MediaPlayer.create(c, Uri.parse(mData.get(0).getMusicData()));
+        mediaPlayer.setLooping(true);
         return new ViewHolder(view);
     }
 

@@ -6,6 +6,7 @@ import android.graphics.Bitmap;
 import android.net.Uri;
 import android.os.Bundle;
 import android.provider.MediaStore;
+import android.support.design.widget.FloatingActionButton;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
@@ -28,10 +29,10 @@ import np.com.nirbhay.musicaid.data_set.MusicDescription;
 import static np.com.nirbhay.musicaid.adapter.MainActivityRecyclerViewAdapter.mData;
 import static np.com.nirbhay.musicaid.adapter.MainActivityRecyclerViewAdapter.mediaPlayer;
 import static np.com.nirbhay.musicaid.adapter.MainActivityRecyclerViewAdapter.playingPosition;
-import static np.com.nirbhay.musicaid.adapter.MainActivityRecyclerViewAdapter.releasePlayer;
 
 public class MainActivity extends AppCompatActivity {
     private ImageView playPause;
+    private FloatingActionButton fab;
     private ImageView albumArt;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -42,6 +43,19 @@ public class MainActivity extends AppCompatActivity {
         ActiveAndroid.initialize(this);
         int FLAG = getIntent().getIntExtra("FLAG",0);
         System.err.println("flag --> "+FLAG);
+        fab = findViewById(R.id.floatingActionButton);
+        fab.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if (mediaPlayer != null) {
+                    if (mediaPlayer.isPlaying()) {
+                        mediaPlayer.pause();
+                    } else {
+                        mediaPlayer.start();
+                    }
+                }
+            }
+        });
         switch (FLAG){
             case 1:
                 ArrayList<MusicDescription> sadData = changePathSadSong(new SadSongModel().getAllList());
@@ -90,16 +104,31 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void setAlbumArt() {
-        threadAlbumArt.start();
+        try {
+            threadAlbumArt.start();
+        } catch (IllegalThreadStateException e) {
+            e.printStackTrace();
+        }
     }
 
     void startBackgroundThread() {
-        threadPlayPauseButtons.start();
+        if (!threadPlayPauseButtons.isAlive()) {
+            try {
+                threadPlayPauseButtons.start();
+            } catch (IllegalThreadStateException e) {
+                e.printStackTrace();
+            }
+        }
     }
 
     void stopBackgroundThread() {
-        threadPlayPauseButtons.interrupt();
-        threadAlbumArt.interrupt();
+        if (threadPlayPauseButtons.isAlive()) {
+            threadPlayPauseButtons.interrupt();
+        }
+        if (threadAlbumArt.isAlive()) {
+            threadAlbumArt.interrupt();
+
+        }
     }
 
     private Thread threadAlbumArt = new Thread(new Runnable() {
@@ -256,14 +285,7 @@ public class MainActivity extends AppCompatActivity {
         RecyclerView.LayoutManager mLayoutManager = new LinearLayoutManager(this);
         mRecyclerView.setLayoutManager(mLayoutManager);
         final MainActivityRecyclerViewAdapter adapter = new MainActivityRecyclerViewAdapter(this, data, 1);
-        android.support.design.widget.FloatingActionButton fab = findViewById(R.id.floatingActionButton);
         fab.setImageResource(R.drawable.sad_emoji);
-        fab.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                releasePlayer();
-            }
-        });
         mRecyclerView.setAdapter(adapter);
     }
 
@@ -272,14 +294,7 @@ public class MainActivity extends AppCompatActivity {
         RecyclerView.LayoutManager mLayoutManager = new LinearLayoutManager(this);
         mRecyclerView.setLayoutManager(mLayoutManager);
         final MainActivityRecyclerViewAdapter adapter = new MainActivityRecyclerViewAdapter(this, data, 2);
-        android.support.design.widget.FloatingActionButton fab = findViewById(R.id.floatingActionButton);
         fab.setImageResource(R.drawable.laugh_emoji);
-        fab.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                releasePlayer();
-            }
-        });
         mRecyclerView.setAdapter(adapter);
     }
 }
