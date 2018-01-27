@@ -34,8 +34,7 @@
 
         <activity
             android:name=".MainActivity"
-            android:label="Music Aid"
-            android:theme="@style/Theme.AppCompat.Light.NoActionBar">
+            android:label="Music Aid">
 
         </activity>
         <activity
@@ -44,7 +43,8 @@
 
         </activity>
 
-        <activity android:name=".MachineLearningActivity"
+        <activity
+            android:name=".EmotionCheckActivity"
             android:label="Music Aid">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />

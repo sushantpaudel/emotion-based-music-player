@@ -15,6 +15,8 @@ import android.widget.TextView;
 import java.util.ArrayList;
 
 import np.com.nirbhay.musicaid.R;
+import np.com.nirbhay.musicaid.active_android.HappySongModel;
+import np.com.nirbhay.musicaid.active_android.SadSongModel;
 import np.com.nirbhay.musicaid.data_set.MusicDescription;
 
 import static android.support.v4.content.res.ResourcesCompat.getDrawable;
@@ -27,9 +29,12 @@ public class MainActivityRecyclerViewAdapter extends RecyclerView.Adapter<MainAc
     private Context context;
     private ArrayList<MusicDescription> mData;
     public static MediaPlayer mediaPlayer;
-    public MainActivityRecyclerViewAdapter(Context context, ArrayList<MusicDescription> data) {
+    private int FLAG;
+
+    public MainActivityRecyclerViewAdapter(Context context, ArrayList<MusicDescription> data, int FLAG) {
         this.context = context;
         this.mData = data;
+        this.FLAG = FLAG;
     }
 
     @Override
@@ -64,6 +69,20 @@ public class MainActivityRecyclerViewAdapter extends RecyclerView.Adapter<MainAc
                 mediaPlayer.start();
             }
         });
+        holder.mCardView.setOnLongClickListener(new View.OnLongClickListener() {
+            @Override
+            public boolean onLongClick(View v) {
+                switch (FLAG) {
+                    case 1:
+                        new SadSongModel().deleteData(mData.get(finalPosition).getMusicData());
+                    case 2:
+                        new HappySongModel().deleteData(mData.get(finalPosition).getMusicData());
+                }
+                mData.remove(finalPosition);
+                notifyDataSetChanged();
+                return true;
+            }
+        });
 
     }
 
@@ -86,6 +105,14 @@ public class MainActivityRecyclerViewAdapter extends RecyclerView.Adapter<MainAc
         try{
             mediaPlayer.release();
         }catch (Exception ignored){}
+    }
+
+    public static void nextSong() {
+        //TODO NEXT SONG
+    }
+
+    public static void previousSong() {
+        //TODO PREVIOUS SONG
     }
 
     class ViewHolder extends RecyclerView.ViewHolder {

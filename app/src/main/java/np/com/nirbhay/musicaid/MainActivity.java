@@ -12,6 +12,7 @@ import android.support.v7.widget.RecyclerView;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.widget.ImageView;
 import android.widget.Toast;
 
 import com.activeandroid.ActiveAndroid;
@@ -28,15 +29,13 @@ import static np.com.nirbhay.musicaid.adapter.MainActivityRecyclerViewAdapter.me
 import static np.com.nirbhay.musicaid.adapter.MainActivityRecyclerViewAdapter.releasePlayer;
 
 public class MainActivity extends AppCompatActivity {
-
+    private ImageView playPause;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+        EmotionCheckActivity.fromActivityResult = false;
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        android.support.v7.widget.Toolbar toolbar = findViewById(R.id.toolbar);
-        if(toolbar!=null){
-            setSupportActionBar(toolbar);
-        }
+        startBackgroundThread();
         ActiveAndroid.initialize(this);
         int FLAG = getIntent().getIntExtra("FLAG",0);
         System.err.println("flag --> "+FLAG);
@@ -51,7 +50,71 @@ public class MainActivity extends AppCompatActivity {
                 System.err.println(happyData.size());
                 addToRecyclerHappySong(happyData);
         }
+        ImageView nextSong = findViewById(R.id.imageViewNextButton);
+        ImageView previousSong = findViewById(R.id.imageViewPreviousButton);
+        playPause = findViewById(R.id.imageViewPlayPauseButton);
+        nextSong.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+
+            }
+        });
+        previousSong.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+
+            }
+        });
+        playPause.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                try {
+                    if (mediaPlayer.isPlaying()) {
+                        mediaPlayer.pause();
+                    } else {
+                        if (mediaPlayer != null) {
+                            mediaPlayer.start();
+                        }
+                    }
+                } catch (NullPointerException ignored) {
+                }
+            }
+        });
     }
+
+    void startBackgroundThread() {
+        thread.start();
+    }
+
+    void stopBackgroundThread() {
+        thread.interrupt();
+    }
+
+    private Thread thread = new Thread(new Runnable() {
+        @Override
+        public void run() {
+            while (true) {
+                try {
+                    Thread.sleep(100);
+                    runOnUiThread(new Runnable() {
+                        @Override
+                        public void run() {
+                            try {
+                                if (mediaPlayer.isPlaying()) {
+                                    playPause.setImageResource(R.drawable.ic_pause);
+                                } else {
+                                    playPause.setImageResource(R.drawable.ic_play);
+                                }
+                            } catch (Exception ignored) {
+                            }
+                        }
+                    });
+                } catch (InterruptedException e) {
+                    break;
+                }
+            }
+        }
+    });
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
@@ -62,6 +125,7 @@ public class MainActivity extends AppCompatActivity {
     @Override
     public void onBackPressed() {
         super.onBackPressed();
+        stopBackgroundThread();
         try {
             mediaPlayer.release();
         } catch (Exception ignored) {
@@ -136,19 +200,11 @@ public class MainActivity extends AppCompatActivity {
         return bitmap;
     }
 
-    private void addToRecyclerMain(ArrayList<MusicDescription> data) {
-        RecyclerView mRecyclerView = findViewById(R.id.recyclerViewMain);
-        RecyclerView.LayoutManager mLayoutManager = new LinearLayoutManager(this);
-        mRecyclerView.setLayoutManager(mLayoutManager);
-        MainActivityRecyclerViewAdapter adapter = new MainActivityRecyclerViewAdapter(this, data);
-        mRecyclerView.setAdapter(adapter);
-    }
-
     private void addToRecyclerSadSong(ArrayList<MusicDescription> data) {
         RecyclerView mRecyclerView = findViewById(R.id.recyclerViewMain);
         RecyclerView.LayoutManager mLayoutManager = new LinearLayoutManager(this);
         mRecyclerView.setLayoutManager(mLayoutManager);
-        final MainActivityRecyclerViewAdapter adapter = new MainActivityRecyclerViewAdapter(this, data);
+        final MainActivityRecyclerViewAdapter adapter = new MainActivityRecyclerViewAdapter(this, data, 1);
         android.support.design.widget.FloatingActionButton fab = findViewById(R.id.floatingActionButton);
         fab.setImageResource(R.drawable.sad_emoji);
         fab.setOnClickListener(new View.OnClickListener() {
@@ -160,12 +216,11 @@ public class MainActivity extends AppCompatActivity {
         mRecyclerView.setAdapter(adapter);
     }
 
-
     private void addToRecyclerHappySong(ArrayList<MusicDescription> data) {
         RecyclerView mRecyclerView = findViewById(R.id.recyclerViewMain);
         RecyclerView.LayoutManager mLayoutManager = new LinearLayoutManager(this);
         mRecyclerView.setLayoutManager(mLayoutManager);
-        final MainActivityRecyclerViewAdapter adapter = new MainActivityRecyclerViewAdapter(this, data);
+        final MainActivityRecyclerViewAdapter adapter = new MainActivityRecyclerViewAdapter(this, data, 2);
         android.support.design.widget.FloatingActionButton fab = findViewById(R.id.floatingActionButton);
         fab.setImageResource(R.drawable.laugh_emoji);
         fab.setOnClickListener(new View.OnClickListener() {

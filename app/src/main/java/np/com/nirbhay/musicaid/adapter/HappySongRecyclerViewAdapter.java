@@ -10,6 +10,7 @@ import android.widget.Toast;
 import java.util.ArrayList;
 
 import np.com.nirbhay.musicaid.R;
+import np.com.nirbhay.musicaid.active_android.HappySongModel;
 import np.com.nirbhay.musicaid.data_set.MusicDescription;
 
 import static android.support.v4.content.res.ResourcesCompat.getDrawable;
@@ -22,7 +23,7 @@ public class HappySongRecyclerViewAdapter extends MainActivityRecyclerViewAdapte
     private ArrayList<MusicDescription> mData;
     private Context context;
     public HappySongRecyclerViewAdapter(Context context, ArrayList<MusicDescription> data) {
-        super(context, data);
+        super(context, data, 2);
         this.context = context;
         this.mData = data;
     }
@@ -44,6 +45,15 @@ public class HappySongRecyclerViewAdapter extends MainActivityRecyclerViewAdapte
             @Override
             public void onClick(View v) {
                 Toast.makeText(context,mData.get(finalPosition).getDisplayName(),Toast.LENGTH_SHORT).show();
+            }
+        });
+        holder.mCardView.setOnLongClickListener(new View.OnLongClickListener() {
+            @Override
+            public boolean onLongClick(View v) {
+                new HappySongModel().deleteData(mData.get(finalPosition).getMusicData());
+                mData.remove(finalPosition);
+                notifyDataSetChanged();
+                return false;
             }
         });
     }

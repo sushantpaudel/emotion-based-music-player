@@ -42,6 +42,7 @@ import android.view.MenuItem;
 import android.view.Surface;
 import android.view.TextureView;
 import android.view.View;
+import android.widget.ImageView;
 import android.widget.ProgressBar;
 import android.widget.Toast;
 
@@ -71,7 +72,7 @@ import np.com.nirbhay.musicaid.CognitiveEmotion.ImageHelper;
 
 
 @SuppressLint("NewApi")
-public class MachineLearningActivity extends AppCompatActivity {
+public class EmotionCheckActivity extends AppCompatActivity {
     private static final int REQUEST_SELECT_IMAGE = 13;
     private FloatingActionButton mButtonSelectImage;
     private Uri mImageUri;
@@ -82,12 +83,13 @@ public class MachineLearningActivity extends AppCompatActivity {
     private static final String TAG = "CameraController";
     private TextureView textureView;
     private static final SparseIntArray ORIENTATIONS = new SparseIntArray();
+    static boolean fromActivityResult = false;
 
     static {
-        ORIENTATIONS.append(Surface.ROTATION_0, 0);
-        ORIENTATIONS.append(Surface.ROTATION_90, 90);
-        ORIENTATIONS.append(Surface.ROTATION_180, 180);
-        ORIENTATIONS.append(Surface.ROTATION_270, 270);
+        ORIENTATIONS.append(Surface.ROTATION_0, 270);
+        ORIENTATIONS.append(Surface.ROTATION_90, 0);
+        ORIENTATIONS.append(Surface.ROTATION_180, 90);
+        ORIENTATIONS.append(Surface.ROTATION_270, 180);
     }
 
     private String cameraId;
@@ -101,24 +103,26 @@ public class MachineLearningActivity extends AppCompatActivity {
     private static final int REQUEST_CAMERA_PERMISSION = 200;
     private Handler mBackgroundHandler;
     private HandlerThread mBackgroundThread;
-
+    private FloatingActionButton changeCamera;
+    private ImageView imageView;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_machine_learning);
         textureView = findViewById(R.id.textureViewMachine);
+        progressBar = findViewById(R.id.progressBarMachine);
+        changeCamera = findViewById(R.id.flipCamera);
+        FloatingActionButton takePictureButton = findViewById(R.id.captureImage);
+        mButtonSelectImage = findViewById(R.id.selectImage);
+        imageView = findViewById(R.id.imageViewMachine);
+        assert takePictureButton != null;
         assert textureView != null;
         textureView.setSurfaceTextureListener(textureListener);
         client = new EmotionServiceRestClient(getString(R.string.subscription_key));
-        progressBar = findViewById(R.id.progressBarMachine);
-        FloatingActionButton changeCamera = findViewById(R.id.flipCamera);
-        FloatingActionButton takePictureButton = findViewById(R.id.captureImage);
-        mButtonSelectImage = findViewById(R.id.selectImage);
-        assert takePictureButton != null;
         takePictureButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                takePicture();
+                takePictureTexture();
             }
         });
         mButtonSelectImage.setOnClickListener(new View.OnClickListener() {
@@ -169,8 +173,10 @@ public class MachineLearningActivity extends AppCompatActivity {
                     @Override
                     public void run() {
                         try {
+                            changeCamera.setClickable(false);
                             Thread.sleep(1000L);
                             isCameraChanged = false;
+                            changeCamera.setClickable(true);
                         } catch (InterruptedException ignored) {
                         }
                     }
@@ -180,7 +186,7 @@ public class MachineLearningActivity extends AppCompatActivity {
     };
     private final CameraDevice.StateCallback stateCallback = new CameraDevice.StateCallback() {
         @Override
-        public void onOpened(CameraDevice camera) {
+        public void onOpened(@NonNull CameraDevice camera) {
             //This is called when the camera is open
             Log.e(TAG, "onOpened");
             cameraDevice = camera;
@@ -188,12 +194,12 @@ public class MachineLearningActivity extends AppCompatActivity {
         }
 
         @Override
-        public void onDisconnected(CameraDevice camera) {
+        public void onDisconnected(@NonNull CameraDevice camera) {
             cameraDevice.close();
         }
 
         @Override
-        public void onError(CameraDevice camera, int error) {
+        public void onError(@NonNull CameraDevice camera, int error) {
             cameraDevice.close();
             cameraDevice = null;
         }
@@ -221,6 +227,13 @@ public class MachineLearningActivity extends AppCompatActivity {
         }
     }
 
+    private void takePictureTexture() {
+        mBitmap = textureView.getBitmap();
+        imageView.setVisibility(View.VISIBLE);
+        imageView.setImageBitmap(mBitmap);
+        doRecognize();
+    }
+
     protected void takePicture() {
         if (null == cameraDevice) {
             Log.e(TAG, "cameraDevice is null");
@@ -228,11 +241,10 @@ public class MachineLearningActivity extends AppCompatActivity {
         }
         CameraManager manager = (CameraManager) getSystemService(Context.CAMERA_SERVICE);
         try {
+            assert manager != null;
             CameraCharacteristics characteristics = manager.getCameraCharacteristics(cameraDevice.getId());
             Size[] jpegSizes = null;
-            if (characteristics != null) {
-                jpegSizes = characteristics.get(CameraCharacteristics.SCALER_STREAM_CONFIGURATION_MAP).getOutputSizes(ImageFormat.JPEG);
-            }
+            jpegSizes = characteristics.get(CameraCharacteristics.SCALER_STREAM_CONFIGURATION_MAP).getOutputSizes(ImageFormat.JPEG);
             int width = 640;
             int height = 480;
             if (jpegSizes != null && 0 < jpegSizes.length) {
@@ -294,8 +306,6 @@ public class MachineLearningActivity extends AppCompatActivity {
                         options.inPreferredConfig = Bitmap.Config.ARGB_8888;
                         mBitmap = BitmapFactory.decodeStream(new FileInputStream(file), null, options);
                         System.err.println("Image Captured!!");
-//                        mBitmap = textureView.getBitmap();
-//                        stopBackgroundThread();
                         doRecognize();
                         createCameraPreview();
                     } catch (Exception e) {
@@ -411,6 +421,9 @@ public class MachineLearningActivity extends AppCompatActivity {
     @Override
     protected void onResume() {
         super.onResume();
+        if (!fromActivityResult) {
+            imageView.setVisibility(View.GONE);
+        }
         closeCamera();
         Log.e(TAG, "onResume");
         startBackgroundThread();
@@ -442,7 +455,7 @@ public class MachineLearningActivity extends AppCompatActivity {
         int itemId = item.getItemId();
         switch (itemId) {
             case R.id.mainActivity:
-                startActivity(new Intent(MachineLearningActivity.this, MainActivity.class));
+                startActivity(new Intent(EmotionCheckActivity.this, MainActivity.class));
             default:
                 return super.onOptionsItemSelected(item);
         }
@@ -454,7 +467,7 @@ public class MachineLearningActivity extends AppCompatActivity {
         progressBar.setVisibility(View.VISIBLE);
         // Do emotion detection using auto-detected faces.
         try {
-            new MachineLearningActivity.doRequest(false).execute();
+            new EmotionCheckActivity.doRequest(false).execute();
         } catch (Exception e) {
             System.err.println("Error encountered. Exception is: " + e.toString());
         }
@@ -465,7 +478,7 @@ public class MachineLearningActivity extends AppCompatActivity {
         } else {
             // Do emotion detection using face rectangles provided by Face API.
             try {
-                new MachineLearningActivity.doRequest(true).execute();
+                new EmotionCheckActivity.doRequest(true).execute();
             } catch (Exception e) {
                 System.err.println("Error encountered. Exception is: " + e.toString());
             }
@@ -485,14 +498,15 @@ public class MachineLearningActivity extends AppCompatActivity {
             case REQUEST_SELECT_IMAGE:
                 if (resultCode == RESULT_OK) {
                     // If image is selected successfully, set the image URI and bitmap.
+                    fromActivityResult = true;
                     mImageUri = data.getData();
                     mBitmap = ImageHelper.loadSizeLimitedBitmapFromUri(
                             mImageUri, getContentResolver());
                     if (mBitmap != null) {
-//                        ImageView imageView = (ImageView) findViewById(R.id.selectedImage);
-//                        imageView.setImageBitmap(mBitmap);
                         Log.d("RecognizeActivity", "Image: " + mImageUri + " resized to " + mBitmap.getWidth()
                                 + "x" + mBitmap.getHeight());
+                        imageView.setVisibility(View.VISIBLE);
+                        imageView.setImageBitmap(mBitmap);
                         doRecognize();
                     }
                 }
@@ -647,7 +661,7 @@ public class MachineLearningActivity extends AppCompatActivity {
                     count++;
                     double sadness = r.scores.sadness;
                     double happiness = r.scores.happiness;
-                    Intent intent = new Intent(MachineLearningActivity.this, MainActivity.class);
+                    Intent intent = new Intent(EmotionCheckActivity.this, MainActivity.class);
                     if (sadness > happiness) {
                         Toast.makeText(context, "You 're sad!", Toast.LENGTH_SHORT).show();
                         intent.putExtra("FLAG", 1);

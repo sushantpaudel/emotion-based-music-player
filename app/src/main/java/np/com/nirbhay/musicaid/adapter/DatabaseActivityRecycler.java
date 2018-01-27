@@ -4,7 +4,6 @@ import android.content.Context;
 import android.graphics.Bitmap;
 import android.view.View;
 import android.widget.ImageView;
-import android.widget.Switch;
 import android.widget.TextView;
 
 import com.activeandroid.ActiveAndroid;
@@ -27,7 +26,7 @@ public class DatabaseActivityRecycler extends MainActivityRecyclerViewAdapter {
     private Context context;
     private int FLAG;
     public DatabaseActivityRecycler(Context context, ArrayList<MusicDescription> data, int FLAG) {
-        super(context, data);
+        super(context, data, FLAG);
         this.context = context;
         this.mData = data;
         this.FLAG = FLAG;

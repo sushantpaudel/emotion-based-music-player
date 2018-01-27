@@ -23,13 +23,14 @@ public class SadSongRecyclerViewAdapter extends MainActivityRecyclerViewAdapter 
     private ArrayList<MusicDescription> mData;
     private Context context;
     public SadSongRecyclerViewAdapter(Context context, ArrayList<MusicDescription> data) {
-        super(context, data);
+        super(context, data, 1);
         this.mData = data;
         this.context = context;
     }
 
     @Override
-    public void onBindViewHolder(ViewHolder holder, final int position) {
+    public void onBindViewHolder(ViewHolder holder, int position) {
+        position = holder.getAdapterPosition();
         TextView textView = holder.mTextView;
         ImageView imageView = holder.mImageView;
         final String musicDescription = mData.get(position).getMusicDescription();
@@ -50,10 +51,10 @@ public class SadSongRecyclerViewAdapter extends MainActivityRecyclerViewAdapter 
         holder.mCardView.setOnLongClickListener(new View.OnLongClickListener() {
             @Override
             public boolean onLongClick(View v) {
-                new SadSongModel().deleteData(mData.get(position).getMusicData());
-                mData.remove(position);
+                new SadSongModel().deleteData(mData.get(finalPosition).getMusicData());
+                mData.remove(finalPosition);
                 notifyDataSetChanged();
-                return true;
+                return false;
             }
         });
     }
