@@ -150,9 +150,9 @@ public class MainActivityRecyclerViewAdapter extends RecyclerView.Adapter<MainAc
 
         ViewHolder(View itemView) {
             super(itemView);
-            mCardView = (CardView) itemView.findViewById(R.id.cardViewMusicMain);
-            mImageView = (ImageView) itemView.findViewById(R.id.imageAlbumArt);
-            mTextView = (TextView) itemView.findViewById(R.id.textMusicDescription);
+            mCardView = itemView.findViewById(R.id.cardViewMusicMain);
+            mImageView = itemView.findViewById(R.id.imageAlbumArt);
+            mTextView = itemView.findViewById(R.id.textMusicDescription);
         }
     }
 }

@@ -1,7 +1,6 @@
 package np.com.nirbhay.musicaid;
 
 import android.content.ContentUris;
-import android.content.Intent;
 import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.net.Uri;
@@ -15,7 +14,6 @@ import android.widget.ProgressBar;
 import android.widget.Toast;
 
 import com.activeandroid.ActiveAndroid;
-import com.github.clans.fab.FloatingActionButton;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -23,9 +21,7 @@ import java.util.List;
 import np.com.nirbhay.musicaid.active_android.HappySongModel;
 import np.com.nirbhay.musicaid.active_android.SadSongModel;
 import np.com.nirbhay.musicaid.adapter.DatabaseActivityRecycler;
-import np.com.nirbhay.musicaid.adapter.HappySongRecyclerViewAdapter;
 import np.com.nirbhay.musicaid.adapter.MainActivityRecyclerViewAdapter;
-import np.com.nirbhay.musicaid.adapter.SadSongRecyclerViewAdapter;
 import np.com.nirbhay.musicaid.data_set.MusicDescription;
 
 public class DatabaseActivity extends AppCompatActivity {
@@ -80,18 +76,37 @@ public class DatabaseActivity extends AppCompatActivity {
                 null,
                 null);
 
+        List<HappySongModel> listHappy = new HappySongModel().getAllList();
+        List<SadSongModel> listSad = new SadSongModel().getAllList();
         ArrayList<MusicDescription> songs = new ArrayList<>();
         try{
             while (cursor.moveToNext()) {
-                MusicDescription music = new MusicDescription();
-                music.setAlbumId(cursor.getInt(0));
-                music.setArtistName(cursor.getString(1));
-                music.setTitleName(cursor.getString(2));
-                music.setMusicData(cursor.getString(3));
-                music.setDisplayName(cursor.getString(4));
-                music.setDuration(cursor.getInt(5));
-                music.setAlbumArt(albumArt(cursor.getInt(0)));
-                songs.add(music);
+                int count = 0;
+                for (HappySongModel o : listHappy) {
+                    if (o.title_name.equals(cursor.getString(2))) {
+                        count++;
+                        break;
+                    }
+                }
+                if (count == 0) {
+                    for (SadSongModel o : listSad) {
+                        if (o.title_name.equals(cursor.getString(2))) {
+                            count++;
+                            break;
+                        }
+                    }
+                }
+                if (count == 0) {
+                    MusicDescription music = new MusicDescription();
+                    music.setAlbumId(cursor.getInt(0));
+                    music.setArtistName(cursor.getString(1));
+                    music.setTitleName(cursor.getString(2));
+                    music.setMusicData(cursor.getString(3));
+                    music.setDisplayName(cursor.getString(4));
+                    music.setDuration(cursor.getInt(5));
+                    music.setAlbumArt(albumArt(cursor.getInt(0)));
+                    songs.add(music);
+                }
             }
         }catch (Exception ignored){}
         return songs;

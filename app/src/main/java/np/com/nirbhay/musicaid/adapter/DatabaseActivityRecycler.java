@@ -33,7 +33,7 @@ public class DatabaseActivityRecycler extends MainActivityRecyclerViewAdapter {
     }
 
     @Override
-    public void onBindViewHolder(ViewHolder holder, int position) {
+    public void onBindViewHolder(final ViewHolder holder, int position) {
         TextView textView = holder.mTextView;
         ImageView imageView = holder.mImageView;
         final String musicDescription = mData.get(position).getMusicDescription();
@@ -74,6 +74,9 @@ public class DatabaseActivityRecycler extends MainActivityRecyclerViewAdapter {
                         happySong.save();
                         break;
                 }
+                mData.remove(finalPosition);
+                notifyItemRemoved(finalPosition);
+                notifyItemRangeChanged(finalPosition, getItemCount());
             }
         });
 

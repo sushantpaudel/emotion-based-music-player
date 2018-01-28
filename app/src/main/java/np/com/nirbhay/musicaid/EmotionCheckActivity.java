@@ -62,6 +62,7 @@ import np.com.nirbhay.musicaid.CognitiveEmotion.ImageHelper;
 @SuppressLint("NewApi")
 public class EmotionCheckActivity extends AppCompatActivity {
     private static final int REQUEST_SELECT_IMAGE = 13;
+    private FloatingActionButton takePictureButton;
     private FloatingActionButton mButtonSelectImage;
     private Uri mImageUri;
     private ProgressBar progressBar;
@@ -100,7 +101,7 @@ public class EmotionCheckActivity extends AppCompatActivity {
         textureView = findViewById(R.id.textureViewMachine);
         progressBar = findViewById(R.id.progressBarMachine);
         changeCamera = findViewById(R.id.flipCamera);
-        FloatingActionButton takePictureButton = findViewById(R.id.captureImage);
+        takePictureButton = findViewById(R.id.captureImage);
         mButtonSelectImage = findViewById(R.id.selectImage);
         imageView = findViewById(R.id.imageViewMachine);
         assert takePictureButton != null;
@@ -219,6 +220,7 @@ public class EmotionCheckActivity extends AppCompatActivity {
         mBitmap = textureView.getBitmap();
         imageView.setVisibility(View.VISIBLE);
         imageView.setImageBitmap(mBitmap);
+        takePictureButton.setClickable(false);
         doRecognize();
     }
 
@@ -565,6 +567,7 @@ public class EmotionCheckActivity extends AppCompatActivity {
                     break;
                 }
             }
+            takePictureButton.setClickable(true);
             mButtonSelectImage.setEnabled(true);
         }
     }

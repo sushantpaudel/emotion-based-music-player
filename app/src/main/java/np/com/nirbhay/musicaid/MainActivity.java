@@ -29,6 +29,7 @@ import np.com.nirbhay.musicaid.data_set.MusicDescription;
 import static np.com.nirbhay.musicaid.adapter.MainActivityRecyclerViewAdapter.mData;
 import static np.com.nirbhay.musicaid.adapter.MainActivityRecyclerViewAdapter.mediaPlayer;
 import static np.com.nirbhay.musicaid.adapter.MainActivityRecyclerViewAdapter.playingPosition;
+import static np.com.nirbhay.musicaid.adapter.MainActivityRecyclerViewAdapter.startMusic;
 
 public class MainActivity extends AppCompatActivity {
     private ImageView playPause;
@@ -98,6 +99,7 @@ public class MainActivity extends AppCompatActivity {
                     }
                     setAlbumArt();
                 } catch (Exception ignored) {
+                    startMusic(0);
                 }
             }
         });
@@ -189,6 +191,7 @@ public class MainActivity extends AppCompatActivity {
     protected void onResume() {
         super.onResume();
         startBackgroundThread();
+        playingPosition = 0;
     }
 
     @Override
